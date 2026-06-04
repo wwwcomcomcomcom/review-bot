@@ -20,7 +20,7 @@ export async function collectDiff(
   let page = 1;
 
   for (;;) {
-    const response = await octokit.rest.pulls.listFiles({
+    const response = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}/files', {
       owner,
       repo,
       pull_number: pullNumber,

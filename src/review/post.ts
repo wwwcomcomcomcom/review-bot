@@ -48,7 +48,7 @@ export async function postReview(
     body: `**[${c.severity.toUpperCase()}]** ${c.body}`,
   }));
 
-  await octokit.rest.pulls.createReview({
+  await octokit.request('POST /repos/{owner}/{repo}/pulls/{pull_number}/reviews', {
     owner,
     repo,
     pull_number: pullNumber,
@@ -65,7 +65,7 @@ export async function postFailureComment(
   pullNumber: number,
   reason: string,
 ): Promise<void> {
-  await octokit.rest.issues.createComment({
+  await octokit.request('POST /repos/{owner}/{repo}/issues/{issue_number}/comments', {
     owner,
     repo,
     issue_number: pullNumber,

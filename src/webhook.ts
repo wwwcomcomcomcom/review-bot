@@ -49,7 +49,7 @@ export function registerWebhookHandlers(app: App): void {
 
       void queue.add(async () => {
         try {
-          const { data: pr } = await octokit.rest.pulls.get({ owner, repo, pull_number: prNum });
+          const { data: pr } = await octokit.request('GET /repos/{owner}/{repo}/pulls/{pull_number}', { owner, repo, pull_number: prNum });
           await runPipeline(
             octokit,
             owner,
