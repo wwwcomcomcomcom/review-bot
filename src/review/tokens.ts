@@ -2,7 +2,7 @@ import { encode } from 'gpt-tokenizer';
 import type { DiffFile } from './diff';
 
 const OUTPUT_RESERVE = 8_000;
-const SAFETY_MARGIN  = 2_000;
+const SAFETY_MARGIN = 2_000;
 
 export function estimateTokens(text: string): number {
   try {
@@ -35,11 +35,13 @@ export function splitIntoBatches(
   const available = budget - systemPromptTokens;
 
   if (available <= 0) {
-    return [{
-      files: files.slice(0, 3),
-      isPartial: true,
-      note: 'PR이 너무 커서 일부만 리뷰함',
-    }];
+    return [
+      {
+        files: files.slice(0, 3),
+        isPartial: true,
+        note: 'PR이 너무 커서 일부만 리뷰함',
+      },
+    ];
   }
 
   const batches: DiffBatch[] = [];
@@ -48,7 +50,7 @@ export function splitIntoBatches(
   let includedCount = 0;
 
   for (const file of files) {
-    const text       = formatFileForPrompt(file);
+    const text = formatFileForPrompt(file);
     const fileTokens = estimateTokens(text);
 
     if (fileTokens > available) {
@@ -69,8 +71,8 @@ export function splitIntoBatches(
 
     if (currentTokens + fileTokens > available) {
       batches.push({ files: currentBatch, isPartial: false });
-      currentBatch   = [file];
-      currentTokens  = fileTokens;
+      currentBatch = [file];
+      currentTokens = fileTokens;
     } else {
       currentBatch.push(file);
       currentTokens += fileTokens;
@@ -88,9 +90,7 @@ export function splitIntoBatches(
     last.note = `PR이 너무 커서 일부(${includedCount}/${files.length}개 파일)만 리뷰함`;
   }
 
-  return batches.length > 0
-    ? batches
-    : [{ files: [], isPartial: true, note: '검토할 파일 없음' }];
+  return batches.length > 0 ? batches : [{ files: [], isPartial: true, note: '검토할 파일 없음' }];
 }
 
 function truncatePatch(file: DiffFile, maxTokens: number): DiffFile {

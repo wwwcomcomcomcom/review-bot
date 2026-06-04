@@ -4,16 +4,16 @@ import { buildCommentableSet } from './diff';
 import { config } from '../config';
 
 export async function postReview(
-  octokit:    any,
-  owner:      string,
-  repo:       string,
+  octokit: any,
+  owner: string,
+  repo: string,
   pullNumber: number,
-  files:      DiffFile[],
-  result:     ReviewResult,
+  files: DiffFile[],
+  result: ReviewResult,
 ): Promise<void> {
   const commentable = buildCommentableSet(files);
 
-  const valid:   ReviewComment[] = [];
+  const valid: ReviewComment[] = [];
   const demoted: ReviewComment[] = [];
 
   for (const c of result.comments) {
@@ -25,7 +25,7 @@ export async function postReview(
   }
 
   // Comments arrive severity-sorted from LLM; trim lowest-priority overflow
-  const capped      = valid.slice(0, config.MAX_INLINE_COMMENTS);
+  const capped = valid.slice(0, config.MAX_INLINE_COMMENTS);
   const trimmedCount = valid.length - capped.length;
 
   let body = result.summary;
@@ -52,18 +52,18 @@ export async function postReview(
     owner,
     repo,
     pull_number: pullNumber,
-    event:       'COMMENT',
+    event: 'COMMENT',
     body,
     comments,
   });
 }
 
 export async function postFailureComment(
-  octokit:    any,
-  owner:      string,
-  repo:       string,
+  octokit: any,
+  owner: string,
+  repo: string,
   pullNumber: number,
-  reason:     string,
+  reason: string,
 ): Promise<void> {
   await octokit.rest.issues.createComment({
     owner,
