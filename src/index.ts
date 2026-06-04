@@ -17,17 +17,15 @@ registerWebhookHandlers(githubApp);
 const server = Fastify({ logger: true });
 
 // Capture raw body string so @octokit/webhooks can verify HMAC signature
-server.addContentTypeParser(
-  'application/json',
-  { parseAs: 'string' },
-  (_req, body, done) => done(null, body),
+server.addContentTypeParser('application/json', { parseAs: 'string' }, (_req, body, done) =>
+  done(null, body),
 );
 
 server.post('/webhook', async (request, reply) => {
-  const id        = request.headers['x-github-delivery']    as string | undefined;
-  const name      = request.headers['x-github-event']       as string | undefined;
-  const signature = request.headers['x-hub-signature-256']  as string | undefined;
-  const payload   = request.body as string | undefined;
+  const id = request.headers['x-github-delivery'] as string | undefined;
+  const name = request.headers['x-github-event'] as string | undefined;
+  const signature = request.headers['x-hub-signature-256'] as string | undefined;
+  const payload = request.body as string | undefined;
 
   // Respond immediately — GitHub has a 10-second webhook timeout
   void reply.code(200).send({ ok: true });
@@ -38,7 +36,12 @@ server.post('/webhook', async (request, reply) => {
 
   // Process in the background queue (registered in webhook.ts)
   void githubApp.webhooks
-    .verifyAndReceive({ id, name: name as Parameters<typeof githubApp.webhooks.verifyAndReceive>[0]['name'], signature, payload })
+    .verifyAndReceive({
+      id,
+      name: name as Parameters<typeof githubApp.webhooks.verifyAndReceive>[0]['name'],
+      signature,
+      payload,
+    })
     .catch((err: unknown) => server.log.error({ err }, 'Webhook processing error'));
 });
 

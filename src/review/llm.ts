@@ -5,7 +5,7 @@ import { formatFileForPrompt } from './tokens';
 
 const client = new OpenAI({
   baseURL: config.LLM_BASE_URL,
-  apiKey:  config.LLM_API_KEY,
+  apiKey: config.LLM_API_KEY,
 });
 
 export const SYSTEM_PROMPT = `당신은 시니어 코드 리뷰어입니다. PR의 diff를 분석하고 한국어로 코드 리뷰를 작성합니다.
@@ -41,11 +41,11 @@ const SUBMIT_REVIEW_TOOL: OpenAI.Chat.ChatCompletionTool = {
           items: {
             type: 'object',
             properties: {
-              path:     { type: 'string' },
-              line:     { type: 'integer', description: 'new-file 기준 라인 번호' },
-              side:     { type: 'string', enum: ['RIGHT', 'LEFT'] },
+              path: { type: 'string' },
+              line: { type: 'integer', description: 'new-file 기준 라인 번호' },
+              side: { type: 'string', enum: ['RIGHT', 'LEFT'] },
               severity: { type: 'string', enum: ['critical', 'major', 'minor'] },
-              body:     { type: 'string', description: '한국어 지적/제안' },
+              body: { type: 'string', description: '한국어 지적/제안' },
             },
             required: ['path', 'line', 'side', 'severity', 'body'],
           },
@@ -57,22 +57,22 @@ const SUBMIT_REVIEW_TOOL: OpenAI.Chat.ChatCompletionTool = {
 };
 
 export interface ReviewComment {
-  path:     string;
-  line:     number;
-  side:     'RIGHT' | 'LEFT';
+  path: string;
+  line: number;
+  side: 'RIGHT' | 'LEFT';
   severity: 'critical' | 'major' | 'minor';
-  body:     string;
+  body: string;
 }
 
 export interface ReviewResult {
-  summary:  string;
+  summary: string;
   comments: ReviewComment[];
 }
 
 export async function callLLM(
   prTitle: string,
-  prBody:  string,
-  files:   DiffFile[],
+  prBody: string,
+  files: DiffFile[],
   partialNote?: string,
 ): Promise<ReviewResult> {
   const diffText = files.map(formatFileForPrompt).join('');
@@ -96,17 +96,19 @@ async function callWithRetry(userContent: string, maxRetries: number): Promise<R
     }
 
     try {
-      console.info(`[llm] Attempt ${attempt + 1}/${maxRetries} — calling ${config.LLM_MODEL} (input ~${Math.round(userContent.length / 4)} tokens est.)`);
+      console.info(
+        `[llm] Attempt ${attempt + 1}/${maxRetries} — calling ${config.LLM_MODEL} (input ~${Math.round(userContent.length / 4)} tokens est.)`,
+      );
       const t0 = Date.now();
 
       const response = await client.chat.completions.create(
         {
-          model:       config.LLM_MODEL,
-          messages:    [
+          model: config.LLM_MODEL,
+          messages: [
             { role: 'system', content: SYSTEM_PROMPT },
-            { role: 'user',   content: userContent   },
+            { role: 'user', content: userContent },
           ],
-          tools:       [SUBMIT_REVIEW_TOOL],
+          tools: [SUBMIT_REVIEW_TOOL],
           tool_choice: { type: 'function', function: { name: 'submit_review' } },
         },
         { timeout: 120_000 },
@@ -172,12 +174,14 @@ function validate(raw: unknown): ReviewResult {
   const comments: ReviewComment[] = rawComments
     .filter((c): c is Record<string, unknown> => typeof c === 'object' && c !== null)
     .flatMap((c) => {
-      const path     = String(c.path ?? '');
-      const line     = Number(c.line);
-      const side     = c.side === 'LEFT' ? 'LEFT' : 'RIGHT';
-      const rawSev   = String(c.severity ?? 'minor');
-      const severity = (['critical', 'major', 'minor'].includes(rawSev) ? rawSev : 'minor') as ReviewComment['severity'];
-      const body     = String(c.body ?? '');
+      const path = String(c.path ?? '');
+      const line = Number(c.line);
+      const side = c.side === 'LEFT' ? 'LEFT' : 'RIGHT';
+      const rawSev = String(c.severity ?? 'minor');
+      const severity = (
+        ['critical', 'major', 'minor'].includes(rawSev) ? rawSev : 'minor'
+      ) as ReviewComment['severity'];
+      const body = String(c.body ?? '');
       if (!path || !Number.isInteger(line) || line <= 0 || !body) return [];
       return [{ path, line, side, severity, body }];
     });
