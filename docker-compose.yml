@@ -3,8 +3,7 @@ version: '3.8'
 services:
   review-bot:
     build: .
-    ports:
-      - "${PORT:-80}:${PORT:-80}"
+    network_mode: host
     volumes:
       - ./.env:/app/.env:ro
     restart: unless-stopped
