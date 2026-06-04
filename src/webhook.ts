@@ -8,9 +8,12 @@ const queue = new PQueue({ concurrency: config.QUEUE_CONCURRENCY });
 export function registerWebhookHandlers(app: App): void {
   // Full review on PR open/reopen
   const onPR = ({ octokit, payload }: { octokit: any; payload: any }) => {
-    const owner = payload.repository.owner.login as string;
-    const repo  = payload.repository.name as string;
-    const pr    = payload.pull_request;
+    const owner  = payload.repository.owner.login as string;
+    const repo   = payload.repository.name as string;
+    const pr     = payload.pull_request;
+    const action = payload.action as string;
+
+    console.info(`[webhook] pull_request.${action} ${owner}/${repo}#${pr.number as number} — "${pr.title as string}"`);
 
     void queue.add(() =>
       runPipeline(octokit, owner, repo, pr.number as number, pr.title as string, (pr.body as string | null) ?? '').catch(
@@ -30,6 +33,8 @@ export function registerWebhookHandlers(app: App): void {
     const owner  = payload.repository.owner.login as string;
     const repo   = payload.repository.name as string;
     const prNum  = payload.issue.number as number;
+
+    console.info(`[webhook] issue_comment /review ${owner}/${repo}#${prNum}`);
 
     void queue.add(async () => {
       try {

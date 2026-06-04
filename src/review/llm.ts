@@ -96,6 +96,9 @@ async function callWithRetry(userContent: string, maxRetries: number): Promise<R
     }
 
     try {
+      console.info(`[llm] Attempt ${attempt + 1}/${maxRetries} — calling ${config.LLM_MODEL} (input ~${Math.round(userContent.length / 4)} tokens est.)`);
+      const t0 = Date.now();
+
       const response = await client.chat.completions.create(
         {
           model:       config.LLM_MODEL,
@@ -107,6 +110,11 @@ async function callWithRetry(userContent: string, maxRetries: number): Promise<R
           tool_choice: { type: 'function', function: { name: 'submit_review' } },
         },
         { timeout: 120_000 },
+      );
+
+      const usage = response.usage;
+      console.info(
+        `[llm] Completed in ${Date.now() - t0}ms — prompt=${usage?.prompt_tokens ?? '?'} completion=${usage?.completion_tokens ?? '?'} total=${usage?.total_tokens ?? '?'}`,
       );
 
       const toolCall = response.choices[0]?.message?.tool_calls?.[0];

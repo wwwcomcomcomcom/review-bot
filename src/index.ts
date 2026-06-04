@@ -34,6 +34,8 @@ server.post('/webhook', async (request, reply) => {
 
   if (!id || !name || !signature || !payload) return;
 
+  server.log.info({ event: name, delivery: id }, 'Webhook received');
+
   // Process in the background queue (registered in webhook.ts)
   void githubApp.webhooks
     .verifyAndReceive({ id, name: name as Parameters<typeof githubApp.webhooks.verifyAndReceive>[0]['name'], signature, payload })
